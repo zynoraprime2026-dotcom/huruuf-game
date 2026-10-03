@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Huruuf — Arabic Alphabet Game</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:system-ui,sans-serif;background:#0E2A2B;color:#F3ECDA;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px}
+h1{color:#C9A96A;font-size:1.4rem;margin:8px 0 2px}
+.sub{color:#8FB3B0;font-size:.85rem;margin-bottom:16px;text-align:center}
+#app{width:100%;max-width:420px}
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tab{flex:1;padding:10px;border:none;border-radius:10px;background:#1E4344;color:#F3ECDA;font-size:.95rem;cursor:pointer}
+.tab.active{background:#C9A96A;color:#0E2A2B;font-weight:700}
+.scorebar{display:flex;justify-content:space-between;font-size:.9rem;color:#8FB3B0;margin-bottom:10px}
+.card{background:#1E4344;border-radius:16px;padding:24px 16px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.letter{font-size:5.2rem;line-height:1.2;color:#F3ECDA;direction:rtl}
+.hint{color:#8FB3B0;font-size:.8rem;margin-top:4px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+.opt{padding:14px 8px;border:none;border-radius:12px;background:#0E2A2B;color:#F3ECDA;font-size:1rem;cursor:pointer;border:1.5px solid #2A5556}
+.opt:active{transform:scale(.97)}
+.opt.good{background:#2E7D32;border-color:#4CAF50;font-weight:700}
+.opt.bad{background:#8B2E2E;border-color:#C62828}
+.next{margin-top:16px;padding:12px;width:100%;border:none;border-radius:12px;background:#C9A96A;color:#0E2A2B;font-weight:700;font-size:1rem;cursor:pointer;display:none}
+.learn{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.ltile{background:#1E4344;border-radius:12px;padding:10px 4px;text-align:center}
+.ltile .a{font-size:1.7rem;direction:rtl;display:block}
+.ltile .t{font-size:.62rem;color:#8FB3B0;display:block;margin-top:3px}
+.result{font-size:1rem;min-height:1.4rem;margin-top:10px}
+.pill{display:inline-block;background:#C9A96A;color:#0E2A2B;border-radius:20px;padding:3px 12px;font-weight:700;font-size:.85rem}
+</style>
+</head>
+<body>
+<h1>حروف — Huruuf Game</h1>
+<div class="sub">Learn the Arabic alphabet · for madrasa students</div>
+<div id="app">
+  <div class="tabs">
+    <button class="tab active" id="tPlay" onclick="showTab('play')">Play</button>
+    <button class="tab" id="tLearn" onclick="showTab('learn')">All letters</button>
+  </div>
+  <div id="play">
+    <div class="scorebar"><span>Score: <span class="pill" id="score">0</span></span><span>Streak: <span class="pill" id="streak">0</span></span></div>
+    <div class="card">
+      <div class="letter" id="qLetter">ا</div>
+      <div class="hint">Which letter is this?</div>
+      <div class="opts" id="opts"></div>
+      <div class="result" id="result"></div>
+      <button class="next" id="nextBtn" onclick="newRound()">Next letter</button>
+    </div>
+  </div>
+  <div id="learn" style="display:none"><div class="learn" id="learnGrid"></div></div>
+</div>
+<script>
+const L=[["ا","alif"],["ب","baa"],["ت","taa"],["ث","thaa"],["ج","jeem"],["ح","haa"],["خ","khaa"],["د","daal"],["ذ","dhaal"],["ر","raa"],["ز","zaay"],["س","seen"],["ش","sheen"],["ص","saad"],["ض","daad"],["ط","taa (emphatic)"],["ظ","dhaa (emphatic)"],["ع","ayn"],["غ","ghayn"],["ف","faa"],["ق","qaaf"],["ك","kaaf"],["ل","laam"],["م","meem"],["ن","noon"],["ه","haa"],["و","waaw"],["ي","yaa"]];
+let score=0,streak=0,cur=0,ans="";
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a}
+function newRound(){
+  cur=Math.random()*L.length|0;ans=L[cur][1];
+  document.getElementById("qLetter").textContent=L[cur][0];
+  document.getElementById("result").textContent="";
+  document.getElementById("nextBtn").style.display="none";
+  const wrong=shuffle(L.filter((_,i)=>i!==cur).slice()).slice(0,3).map(x=>x[1]);
+  const opts=shuffle([ans,...wrong]);
+  const box=document.getElementById("opts");box.innerHTML="";
+  opts.forEach(o=>{const b=document.createElement("button");b.className="opt";b.textContent=o;
+    b.onclick=()=>pick(b,o);box.appendChild(b)});
+}
+function pick(b,o){
+  document.querySelectorAll(".opt").forEach(x=>x.disabled=true);
+  const r=document.getElementById("result");
+  if(o===ans){b.classList.add("good");score++;streak++;
+    r.textContent="Correct! م أحسنت";r.style.color="#7BC47F";
+    document.getElementById("nextBtn").textContent=streak>=5?"Next letter (🔥 streak "+streak+")":"Next letter";
+  }else{b.classList.add("bad");streak=0;
+    document.querySelectorAll(".opt").forEach(x=>{if(x.textContent===ans)x.classList.add("good")});
+    r.textContent="It's "+ans+" — remember it!";r.style.color="#E57373";}
+  document.getElementById("score").textContent=score;
+  document.getElementById("streak").textContent=streak;
+  document.getElementById("nextBtn").style.display="block";
+}
+function showTab(t){
+  document.getElementById("play").style.display=t==="play"?"block":"none";
+  document.getElementById("learn").style.display=t==="learn"?"block":"none";
+  document.getElementById("tPlay").classList.toggle("active",t==="play");
+  document.getElementById("tLearn").classList.toggle("active",t==="learn");
+}
+const g=document.getElementById("learnGrid");
+L.forEach(x=>{const d=document.createElement("div");d.className="ltile";
+  d.innerHTML="<span class='a'>"+x[0]+"</span><span class='t'>"+x[1]+"</span>";g.appendChild(d)});
+newRound();
+</script>
+</body>
+</html>
